@@ -76,19 +76,19 @@ mingw32-make
 ## Estructura del Proyecto
 
 quadtree_simulator/
-├── include/
-│   ├── Particle.h
-│   ├── QuadTree.h
-│   ├── Simulator.h
-│   └── Renderer.h
-├── src/
-│   ├── main.cpp
-│   ├── Particle.cpp
-│   ├── QuadTree.cpp
-│   ├── Simulator.cpp
-│   └── Renderer.cpp
-├── CMakeLists.txt
-└── README.md
+    include/
+        Particle.h
+        QuadTree.h
+        Simulator.h
+        Renderer.h
+    src/
+        main.cpp
+        Particle.cpp
+        QuadTree.cpp
+        Simulator.cpp
+        Renderer.cpp
+    CMakeLists.txt
+    README.md
 
 ## Resultados del Benchmark
 
