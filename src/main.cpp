@@ -169,7 +169,7 @@ int main() {
     int QUADTREE_CAPACITY;
     double MIN_RADIUS, MAX_RADIUS;
     double MIN_SPEED, MAX_SPEED;
-    const int QUERY_RADIUS = 80;
+    const int QUERY_RADIUS = 40;
     const double COLLISION_RADIUS = 20.0;
 
     configurarParametros(NUM_PARTICLES, WIDTH, HEIGHT, QUADTREE_CAPACITY,
@@ -426,6 +426,8 @@ int main() {
                             double maxX = std::max(rectX1, rectX2);
                             double maxY = std::max(rectY1, rectY2);
 
+                            sim.buildQuadTree();
+
                             QuadTree::Rect rect(minX, minY, maxX - minX, maxY - minY);
                             int comparisons = 0;
                             auto results = sim.getQuadTree()->queryRange(rect, comparisons);
@@ -446,7 +448,8 @@ int main() {
                     } else if (queryMode) {
                         queryX = pos.x;
                         queryY = pos.y;
-
+                        // aqui forzamos reconstrucción
+                        sim.buildQuadTree();
                         int comparisons = 0;
                         auto results = sim.queryCircle(queryX, queryY, QUERY_RADIUS, comparisons);
 
