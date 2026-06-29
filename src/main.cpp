@@ -7,9 +7,6 @@
 #include "../include/Simulator.h"
 #include "../include/Renderer.h"
 
-// ============================================
-// CONFIGURAR PARAMETROS
-// ============================================
 void configurarParametros(int& numParticles, int& width, int& height,
                           int& capacity, double& minRadius, double& maxRadius,
                           double& minSpeed, double& maxSpeed) {
@@ -17,7 +14,6 @@ void configurarParametros(int& numParticles, int& width, int& height,
     std::cout << "   CONFIGURACION DE SIMULACION\n";
     std::cout << "========================================\n\n";
 
-    // 1. Numero de particulas
     std::cout << "1. NUMERO DE PARTICULAS:\n";
     std::cout << "  [1] 1,000   (pequeno)\n";
     std::cout << "  [2] 5,000   (mediano)\n";
@@ -44,7 +40,6 @@ void configurarParametros(int& numParticles, int& width, int& height,
             break;
     }
 
-    // 2. Tamano del espacio 2D
     std::cout << "\n2. TAMANO DEL ESPACIO 2D:\n";
     std::cout << "  [1] Pequeno (800x600)\n";
     std::cout << "  [2] Mediano (1200x800) - RECOMENDADO\n";
@@ -69,7 +64,6 @@ void configurarParametros(int& numParticles, int& width, int& height,
             break;
     }
 
-    // 3. Capacidad maxima por nodo del QuadTree
     std::cout << "\n3. CAPACIDAD MAXIMA POR NODO:\n";
     std::cout << "  [1] 2  (mas nodos, consultas mas rapidas)\n";
     std::cout << "  [2] 4  (balanceado) - RECOMENDADO\n";
@@ -94,7 +88,6 @@ void configurarParametros(int& numParticles, int& width, int& height,
             break;
     }
 
-    // 4. Radios de particulas
     std::cout << "\n4. RADIO DE PARTICULAS:\n";
     std::cout << "  [1] Pequeno (1-3)\n";
     std::cout << "  [2] Mediano (2-6) - RECOMENDADO\n";
@@ -119,7 +112,6 @@ void configurarParametros(int& numParticles, int& width, int& height,
             break;
     }
 
-    // 5. Velocidades
     std::cout << "\n5. VELOCIDAD DE PARTICULAS:\n";
     std::cout << "  [1] Muy Lenta (2-10)\n";
     std::cout << "  [2] Lenta (10-30)\n";
@@ -159,11 +151,7 @@ void configurarParametros(int& numParticles, int& width, int& height,
     std::cout << "========================================\n\n";
 }
 
-// ============================================
-// MAIN
-// ============================================
 int main() {
-    // Configurar parametros
     int NUM_PARTICLES;
     int WIDTH, HEIGHT;
     int QUADTREE_CAPACITY;
@@ -175,7 +163,6 @@ int main() {
     configurarParametros(NUM_PARTICLES, WIDTH, HEIGHT, QUADTREE_CAPACITY,
                          MIN_RADIUS, MAX_RADIUS, MIN_SPEED, MAX_SPEED);
 
-    // Inicializar simulacion
     sf::Clock clock;
     Simulator sim(WIDTH, HEIGHT, NUM_PARTICLES, QUADTREE_CAPACITY);
     sim.setParticleParams(MIN_RADIUS, MAX_RADIUS, MIN_SPEED, MAX_SPEED);
@@ -192,7 +179,6 @@ int main() {
     bool showCollisions = true;
     bool benchmarkDone = false;
 
-    // Modo rectangulo
     bool rectMode = false;
     double rectX1 = 0, rectY1 = 0, rectX2 = 0, rectY2 = 0;
     bool drawingRect = false;
@@ -209,18 +195,18 @@ int main() {
     std::cout << "  [C] Mostrar/Ocultar colisiones\n";
     std::cout << "  [B] Benchmark   [ESC] Salir\n\n";
 
-    // Variables para arrastrar la vista con el mouse
     bool isDragging = false;
     sf::Vector2f dragStart;
 
+    // BUCLE PRINCIPAL
     while (renderer.isOpen()) {
         sf::Event event;
+        // PROCESAR EVENTOS
         while (renderer.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 renderer.close();
             }
 
-            // Zoom con la rueda del mouse
             if (event.type == sf::Event::MouseWheelScrolled) {
                 if (event.mouseWheelScroll.delta > 0) {
                     renderer.zoomIn();
@@ -229,7 +215,6 @@ int main() {
                 }
             }
 
-            // Arrastrar con clic medio (rueda)
             if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Middle) {
                     isDragging = true;
@@ -252,7 +237,6 @@ int main() {
                 }
             }
 
-            // Teclas
             if (event.type == sf::Event::KeyPressed) {
                 switch (event.key.code) {
                     case sf::Keyboard::Add:
@@ -362,7 +346,6 @@ int main() {
                             std::cout << "10. Colisiones BF:             " << bfCollisions.size() << "\n";
                             std::cout << "----------------------------------------\n\n";
 
-                            // Guardar CSV
                             std::ofstream file("resultados_benchmark.csv", std::ios::app);
                             if (file.is_open()) {
                                 file.seekp(0, std::ios::end);
@@ -404,7 +387,6 @@ int main() {
                 }
             }
 
-            // Manejo de clics
             if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     auto pos = renderer.getMousePosition();
@@ -414,7 +396,7 @@ int main() {
                             rectX1 = pos.x;
                             rectY1 = pos.y;
                             drawingRect = true;
-                            std::cout << "Esquina 1: (" << rectX1 << ", " << rectY1 << "). Haz clic para la esquina 2.\n";
+                            renderer.addMessage("Esquina 1: (" + std::to_string((int)rectX1) + ", " + std::to_string((int)rectY1) + "). Haz clic para la esquina 2.");
                         } else {
                             rectX2 = pos.x;
                             rectY2 = pos.y;
@@ -432,13 +414,13 @@ int main() {
                             int comparisons = 0;
                             auto results = sim.getQuadTree()->queryRange(rect, comparisons);
 
-                            std::cout << "\nCONSULTA RECTANGULAR:\n";
-                            std::cout << "   Region: (" << minX << ", " << minY << ") a (" << maxX << ", " << maxY << ")\n";
-                            std::cout << "   Resultados: " << results.size() << " particulas\n";
-                            std::cout << "   Comparaciones QT: " << comparisons << "\n";
-                            std::cout << "   Comparaciones BF: " << sim.getNumParticles() << "\n";
                             double speedup = (double)sim.getNumParticles() / std::max(1, comparisons);
-                            std::cout << "   Speedup: " << std::fixed << std::setprecision(2) << speedup << "x\n";
+
+                            renderer.addMessage("CONSULTA RECTANGULAR");
+                            renderer.addMessage("Region: (" + std::to_string((int)minX) + ", " + std::to_string((int)minY) + ") a (" + std::to_string((int)maxX) + ", " + std::to_string((int)maxY) + ")");
+                            renderer.addMessage("Resultados: " + std::to_string(results.size()) + " particulas");
+                            renderer.addMessage("Comparaciones QT: " + std::to_string(comparisons));
+                            renderer.addMessage("Speedup: " + std::to_string(speedup) + "x");
 
                             rectX1 = minX;
                             rectY1 = minY;
@@ -448,27 +430,35 @@ int main() {
                     } else if (queryMode) {
                         queryX = pos.x;
                         queryY = pos.y;
-                        // aqui forzamos reconstrucción
                         sim.buildQuadTree();
                         int comparisons = 0;
                         auto results = sim.queryCircle(queryX, queryY, QUERY_RADIUS, comparisons);
 
-                        std::cout << "\nCONSULTA CIRCULAR:\n";
-                        std::cout << "   Centro: (" << queryX << ", " << queryY << ")\n";
-                        std::cout << "   Radio: " << QUERY_RADIUS << "\n";
-                        std::cout << "   Resultados: " << results.size() << " particulas\n";
-                        std::cout << "   Comparaciones QT: " << comparisons << "\n";
-                        std::cout << "   Comparaciones BF: " << sim.getNumParticles() << "\n";
                         double speedup = (double)sim.getNumParticles() / std::max(1, comparisons);
-                        std::cout << "   Speedup: " << std::fixed << std::setprecision(2) << speedup << "x\n";
+
+                        renderer.addMessage("CONSULTA CIRCULAR");
+                        renderer.addMessage("Centro: (" + std::to_string((int)queryX) + ", " + std::to_string((int)queryY) + ")");
+                        renderer.addMessage("Radio: " + std::to_string(QUERY_RADIUS));
+                        renderer.addMessage("Resultados: " + std::to_string(results.size()) + " particulas");
+                        renderer.addMessage("Comparaciones QT: " + std::to_string(comparisons));
+                        renderer.addMessage("Speedup: " + std::to_string(speedup) + "x");
 
                         benchmarkDone = false;
                     }
                 }
+                else if (event.mouseButton.button == sf::Mouse::Right) {
+                    sf::Vector2f pos = renderer.getMousePosition();
+                    sim.addParticlesAtMouse(pos.x, pos.y, 1);
+                    sim.buildQuadTree();
+                    benchmarkDone = false;
+                    renderer.addMessage("Insertadas particula en (" + std::to_string((int)pos.x) + ", " + std::to_string((int)pos.y) + ")");
+                }
             }
-        }
+        } // FIN DE PROCESAMIENTO DE EVENTOS
 
-        // Actualizar simulacion
+        // ============================================
+        // ACTUALIZAR SIMULACION
+        // ============================================
         float dt = clock.restart().asSeconds();
         if (!paused) {
             sim.update(dt);
@@ -477,12 +467,15 @@ int main() {
             }
         }
 
-        // Renderizar
+        sim.updateCollisionStatus(COLLISION_RADIUS);
+
+        // ============================================
+        // RENDERIZAR
+        // ============================================
         renderer.clear();
         renderer.drawParticles(sim.getParticles());
         renderer.drawQuadTree(sim.getQuadTree());
 
-        // Consulta circulo
         int qtComparisons = 0;
         auto qtResult = sim.queryCircle(queryX, queryY, QUERY_RADIUS, qtComparisons);
 
@@ -493,7 +486,6 @@ int main() {
             }
         }
 
-        // Dibujar rectangulo en construccion
         if (rectMode && drawingRect) {
             auto pos = renderer.getMousePosition();
             sf::RectangleShape rect;
@@ -509,7 +501,6 @@ int main() {
             renderer.drawRect(rect);
         }
 
-        // Dibujar rectangulo de resultado
         if (!rectMode && !drawingRect && rectX1 != rectX2 && rectY1 != rectY2) {
             sf::RectangleShape rect;
             float minX = std::min((float)rectX1, (float)rectX2);
@@ -523,7 +514,6 @@ int main() {
             rect.setOutlineThickness(2);
             renderer.drawRect(rect);
 
-            // Resaltar particulas dentro del rectangulo
             QuadTree::Rect range(minX, minY, maxX - minX, maxY - minY);
             int comparisons = 0;
             auto results = sim.getQuadTree()->queryRange(range, comparisons);
@@ -532,11 +522,29 @@ int main() {
             }
         }
 
-        // Colisiones
+        // Obtener colisiones reales y todas las posibles
         auto collisions = sim.detectCollisions(COLLISION_RADIUS);
+        auto allPossible = sim.detectPossibleCollisions(COLLISION_RADIUS);
 
+        // Filtrar posibles: eliminar los pares que ya están en collisions
+        std::vector<std::pair<Particle*, Particle*>> possibleCollisions;
+        for (auto& p : allPossible) {
+            bool isReal = false;
+            for (auto& c : collisions) {
+                if ((c.first == p.first && c.second == p.second) ||
+                    (c.first == p.second && c.second == p.first)) {
+                    isReal = true;
+                    break;
+                }
+            }
+            if (!isReal) {
+                possibleCollisions.push_back(p);
+            }
+        }
+
+        // Dibujar líneas rojas solo para posibles (no reales)
         if (showCollisions) {
-            for (auto& col : collisions) {
+            for (auto& col : possibleCollisions) {
                 sf::Vertex line[] = {
                     sf::Vertex(sf::Vector2f(col.first->x, col.first->y), sf::Color::Red),
                     sf::Vertex(sf::Vector2f(col.second->x, col.second->y), sf::Color::Red)
@@ -545,7 +553,6 @@ int main() {
             }
         }
 
-        // Metricas en pantalla
         std::stringstream info;
         info << "Particulas: " << sim.getNumParticles() << "\n";
         info << "Nodos QT: " << sim.getQuadTree()->getTotalNodes() << "\n";
@@ -554,7 +561,8 @@ int main() {
         info << "Comp BF: " << sim.getNumParticles() << "\n";
         double speedup = (double)sim.getNumParticles() / std::max(1, qtComparisons);
         info << "Speedup: " << std::fixed << std::setprecision(2) << speedup << "x\n";
-        info << "Colisiones: " << collisions.size() << "\n";
+        info << "Colisiones reales: " << collisions.size() << "\n";
+        info << "Posibles (lineas rojas): " << possibleCollisions.size() << "\n";
         info << "Pausa: " << (paused ? "ON" : "OFF") << "  ";
         info << "[1]Unif [2]Clust [3]Dens ";
         info << "[Q]Circle [R]Rect ";
@@ -562,6 +570,7 @@ int main() {
         info << "[C]Col [B]Bench [P]Pausa [Shift+R]Rebuild";
 
         renderer.drawInfo(info.str());
+        renderer.drawMessages();
         renderer.display();
     }
 

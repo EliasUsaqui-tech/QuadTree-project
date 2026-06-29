@@ -4,7 +4,7 @@
 #include <iostream>
 
 Simulator::Simulator(double width, double height, int numParticles, int capacity)
-    : width(width), height(height), numParticles(numParticles), 
+    : width(width), height(height), numParticles(numParticles),
       quadTreeCapacity(capacity),
       minRadius(2.0), maxRadius(6.0),
       minSpeed(50.0), maxSpeed(150.0),
@@ -13,9 +13,6 @@ Simulator::Simulator(double width, double height, int numParticles, int capacity
     particlePtrs.reserve(numParticles * 2);
 }
 
-// ============================================
-// CONFIGURAR PARAMETROS DE PARTICULAS
-// ============================================
 void Simulator::setParticleParams(double minR, double maxR, double minS, double maxS) {
     minRadius = minR;
     maxRadius = maxR;
@@ -27,9 +24,6 @@ void Simulator::setParticleParams(double minR, double maxR, double minS, double 
     std::cout << "   Velocidad: " << minSpeed << " - " << maxSpeed << "\n\n";
 }
 
-// ============================================
-// DISTRIBUCION UNIFORME
-// ============================================
 void Simulator::generateUniform() {
     particles.clear();
     particlePtrs.clear();
@@ -52,9 +46,6 @@ void Simulator::generateUniform() {
     std::cout << "   Velocidad: " << minSpeed << "-" << maxSpeed << "\n";
 }
 
-// ============================================
-// DISTRIBUCION CON CLUSTERS
-// ============================================
 void Simulator::generateClusters(int numClusters) {
     particles.clear();
     particlePtrs.clear();
@@ -88,9 +79,6 @@ void Simulator::generateClusters(int numClusters) {
     std::cout << "   Velocidad: " << minSpeed << "-" << maxSpeed << "\n";
 }
 
-// ============================================
-// DISTRIBUCION DE ALTA DENSIDAD
-// ============================================
 void Simulator::generateHighDensity() {
     particles.clear();
     particlePtrs.clear();
@@ -126,12 +114,10 @@ void Simulator::generateHighDensity() {
     std::cout << "   Velocidad: " << minSpeed << "-" << maxSpeed << "\n";
 }
 
-// ============================================
-// INSERTAR PARTICULA INDIVIDUAL
-// ============================================
 void Simulator::addParticle(double x, double y, double vx, double vy, double radius) {
     int newId = particles.size();
     particles.emplace_back(newId, x, y, vx, vy, radius);
+    particles.back().setColliding(2.0f);
     particlePtrs.push_back(&particles.back());
     numParticles++;
 
@@ -142,9 +128,6 @@ void Simulator::addParticle(double x, double y, double vx, double vy, double rad
     std::cout << "Particula " << newId << " insertada en (" << x << ", " << y << ")\n";
 }
 
-// ============================================
-// INSERTAR PARTICULA ALEATORIA
-// ============================================
 void Simulator::addRandomParticle() {
     std::uniform_real_distribution<double> distX(0, width);
     std::uniform_real_distribution<double> distY(0, height);
@@ -160,9 +143,6 @@ void Simulator::addRandomParticle() {
     addParticle(x, y, vx, vy, radius);
 }
 
-// ============================================
-// INSERTAR MULTIPLES PARTICULAS EN UNA POSICION
-// ============================================
 void Simulator::addParticlesAtMouse(double mx, double my, int count) {
     std::uniform_real_distribution<double> distV(minSpeed, maxSpeed);
     std::uniform_real_distribution<double> distR(minRadius, maxRadius);
@@ -185,18 +165,12 @@ void Simulator::addParticlesAtMouse(double mx, double my, int count) {
     std::cout << count << " particulas insertadas cerca del mouse\n";
 }
 
-// ============================================
-// ACTUALIZAR POSICIONES
-// ============================================
 void Simulator::update(double dt) {
     for (auto& p : particles) {
         p.update(dt, width, height);
     }
 }
 
-// ============================================
-// CONSTRUIR QUADTREE
-// ============================================
 void Simulator::buildQuadTree() {
     quadtree = std::make_unique<QuadTree>(
         QuadTree::Rect(0, 0, width, height), quadTreeCapacity);
@@ -205,18 +179,12 @@ void Simulator::buildQuadTree() {
     }
 }
 
-// ============================================
-// CONSULTA CON QUADTREE
-// ============================================
 std::vector<Particle*> Simulator::queryCircle(double x, double y, double radius, int& comparisons) {
     comparisons = 0;
     if (!quadtree) return {};
     return quadtree->queryCircle(x, y, radius, comparisons);
 }
 
-// ============================================
-// CONSULTA CON FUERZA BRUTA
-// ============================================
 std::vector<Particle*> Simulator::bruteForceCircle(double cx, double cy, double radius) {
     std::vector<Particle*> found;
     double r2 = radius * radius;
@@ -231,24 +199,17 @@ std::vector<Particle*> Simulator::bruteForceCircle(double cx, double cy, double 
 }
 
 // ============================================
-// DETECCION DE COLISIONES CON QUADTREE
+// NUEVA FUNCIÓN: bruteForceCollisions
 // ============================================
-std::vector<std::pair<Particle*, Particle*>> Simulator::detectCollisions(double radius) {
-    if (!quadtree) return {};
-    return quadtree->detectCollisions(radius);
-}
-
-// ============================================
-// DETECCION DE COLISIONES CON FUERZA BRUTA
-// ============================================
-std::vector<std::pair<Particle*, Particle*>> Simulator::bruteForceCollisions(double radius) {
+std::vector<std::pair<Particle*, Particle*>> Simulator::bruteForceCollisions(double /*radius*/) {
     std::vector<std::pair<Particle*, Particle*>> collisions;
-    double r2 = radius * radius;
     for (size_t i = 0; i < particlePtrs.size(); ++i) {
         for (size_t j = i + 1; j < particlePtrs.size(); ++j) {
             double dx = particlePtrs[i]->x - particlePtrs[j]->x;
             double dy = particlePtrs[i]->y - particlePtrs[j]->y;
-            if (dx*dx + dy*dy < r2) {
+            double dist = std::sqrt(dx*dx + dy*dy);
+            double threshold = particlePtrs[i]->radius + particlePtrs[j]->radius;
+            if (dist < threshold) {
                 collisions.push_back({particlePtrs[i], particlePtrs[j]});
             }
         }
@@ -256,18 +217,37 @@ std::vector<std::pair<Particle*, Particle*>> Simulator::bruteForceCollisions(dou
     return collisions;
 }
 
-// ============================================
-// GETTERS
-// ============================================
+std::vector<std::pair<Particle*, Particle*>> Simulator::detectCollisions(double /*radius*/) {
+    if (!quadtree) return {};
+    return quadtree->detectCollisions(1.0);
+}
+
+std::vector<std::pair<Particle*, Particle*>> Simulator::detectPossibleCollisions(double /*radius*/) {
+    if (!quadtree) return {};
+    return quadtree->detectCollisions(1.8);
+}
+
+void Simulator::updateCollisionStatus(double radius) {
+    // 1. Desactivar el estado de colisión de TODAS las partículas
+    for (auto& p : particles) {
+        p.isColliding = false;
+        p.collisionTimer = 0.0f;
+    }
+
+    // 2. Activar solo las que están en la lista actual de colisiones
+    auto collisions = detectCollisions(radius);
+    for (auto& col : collisions) {
+        col.first->setColliding(0.5f);
+        col.second->setColliding(0.5f);
+    }
+}
+
 const std::vector<Particle>& Simulator::getParticles() const { return particles; }
 QuadTree* Simulator::getQuadTree() const { return quadtree.get(); }
 double Simulator::getWidth() const { return width; }
 double Simulator::getHeight() const { return height; }
 int Simulator::getNumParticles() const { return numParticles; }
 
-// ============================================
-// BENCHMARK
-// ============================================
 Simulator::BenchmarkResult Simulator::benchmarkQuery(double x, double y, double radius) {
     BenchmarkResult result;
 

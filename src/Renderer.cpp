@@ -20,7 +20,6 @@ Renderer::Renderer(int width, int height, const std::string& title)
         }
     #endif
 
-    // Configurar vista inicial
     view.reset(sf::FloatRect(0, 0, width, height));
     view.setViewport(sf::FloatRect(0, 0, 1, 1));
     window.setView(view);
@@ -40,11 +39,19 @@ void Renderer::clear() {
 }
 
 void Renderer::drawParticle(const Particle& p, bool highlighted) {
+    sf::Color fillColor = p.color;
+    if (p.isColliding) {
+        fillColor = sf::Color::Red;
+    }
+    if (highlighted) {
+        fillColor = sf::Color::Yellow;
+    }
+
     sf::CircleShape shape(p.radius);
     shape.setPosition(p.x - p.radius, p.y - p.radius);
-    shape.setFillColor(highlighted ? sf::Color::Yellow : p.color);
+    shape.setFillColor(fillColor);
     shape.setOutlineColor(sf::Color::White);
-    shape.setOutlineThickness(highlighted ? 2 : 0);
+    shape.setOutlineThickness(highlighted || p.isColliding ? 2 : 0);
     window.draw(shape);
 }
 
@@ -88,6 +95,26 @@ void Renderer::drawRect(const sf::RectangleShape& rect) {
     window.draw(rect);
 }
 
+void Renderer::addMessage(const std::string& msg) {
+    consoleMessages.push_back(msg);
+    if (consoleMessages.size() > 10) {
+        consoleMessages.erase(consoleMessages.begin());
+    }
+}
+
+void Renderer::drawMessages() {
+    float y = window.getSize().y - 20 * consoleMessages.size() - 10;
+    for (size_t i = 0; i < consoleMessages.size(); ++i) {
+        sf::Text msgText;
+        msgText.setFont(font);
+        msgText.setCharacterSize(12);
+        msgText.setFillColor(sf::Color::White);
+        msgText.setPosition(10, y + i * 20);
+        msgText.setString(consoleMessages[i]);
+        window.draw(msgText);
+    }
+}
+
 void Renderer::display() {
     window.display();
 }
@@ -104,9 +131,6 @@ void Renderer::setInfo(const std::string& info) {
     infoText.setString(info);
 }
 
-// ============================================
-// Metodos de zoom
-// ============================================
 void Renderer::zoomIn() {
     zoomLevel *= 0.8f;
     view.zoom(0.8f);
