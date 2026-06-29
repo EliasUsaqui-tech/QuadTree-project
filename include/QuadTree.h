@@ -17,8 +17,14 @@ public:
     
     bool insert(Particle* p);
     void clear();
-    std::vector<Particle*> queryRange(const Rect& range);
-    std::vector<Particle*> queryCircle(double cx, double cy, double radius);
+
+    // Metodos con contador de comparaciones
+    std::vector<Particle*> queryRange(const Rect& range, int& comparisons);
+    std::vector<Particle*> queryCircle(double cx, double cy, double radius, int& comparisons);
+
+    // Deteccion de colisiones
+    std::vector<std::pair<Particle*, Particle*>> detectCollisions(double radius);
+
     void draw(sf::RenderWindow& window) const;
     int getTotalNodes() const;
     int getComparisons() const;
