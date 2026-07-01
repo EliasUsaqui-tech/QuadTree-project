@@ -110,8 +110,34 @@ Al presionar B se ejecuta un benchmark completo y se guardan los datos en result
 - Speedup
 - Colisiones detectadas con QuadTree
 - Colisiones detectadas con Fuerza Bruta
+- Tiempo promedio por frame (ms)
 
 Estos datos son utiles para el analisis de rendimiento y la elaboracion de graficas comparativas.
+
+## Resultados experimentales
+
+Se ejecutaron 9 corridas de benchmark (3 tamanos de simulacion x 3 distribuciones espaciales), cada una iniciada desde cero para que el tiempo promedio por frame no se mezcle entre configuraciones. Espacio de simulacion: 1200x800 (1600x1200 para Uniforme-10000), capacidad del QuadTree: 4, radios 2-6, velocidades 50-150.
+
+    | Distribucion | Particulas | Comp. QT | Comp. BF | Candidatos/objeto (QT) | Speedup | Tiempo/frame (ms) |
+    |---|---|---|---|---|---|---|
+    | Uniforme | 1,000 | 34 | 1,000 | 0.034 | 29.41x | 19.704 |
+    | Uniforme | 5,000 | 136 | 5,000 | 0.027 | 36.76x | 93.019 |
+    | Uniforme | 10,000 | 107 | 10,000 | 0.011 | 93.46x | 185.714 |
+    | Clusters | 1,000 | 32 | 1,000 | 0.032 | 31.25x | 17.884 |
+    | Clusters | 5,000 | 91 | 5,000 | 0.018 | 54.95x | 82.807 |
+    | Clusters | 10,000 | 263 | 10,000 | 0.026 | 38.02x | 169.656 |
+    | Alta densidad | 1,000 | 25 | 1,000 | 0.025 | 40.00x | 18.277 |
+    | Alta densidad | 5,000 | 43 | 5,000 | 0.009 | 116.28x | 90.958 |
+    | Alta densidad | 10,000 | 123 | 10,000 | 0.012 | 81.30x | 177.625 |
+
+*Candidatos/objeto = ComparacionesQT / Particulas. Tabla completa con todas las columnas en `resultados_benchmark.csv`.*
+
+### Analisis
+
+- **Tiempo por frame**: crece de forma aproximadamente proporcional al numero de particulas (de ~18-20 ms con 1,000 a ~170-186 ms con 10,000), ya que cada frame reconstruye el QuadTree completo ademas de actualizar posiciones y detectar colisiones.
+- **Comparaciones (QuadTree vs fuerza bruta)**: la fuerza bruta siempre compara contra el total de particulas (1,000 / 5,000 / 10,000), mientras que el QuadTree se queda en el rango de 25-263 comparaciones en todos los casos. El speedup resultante va de 29x hasta 116x segun el escenario.
+- **Candidatos revisados por objeto**: se mantiene muy bajo (entre 0.009 y 0.034) en todos los tamanos, lo que confirma que el QuadTree descarta la gran mayoria de las particulas sin revisarlas una por una, sin importar cuantos objetos haya en total.
+- **Efecto de la distribucion espacial**: la distribucion de Alta densidad obtiene el mejor speedup en 5,000 particulas (116.28x), porque la mayoria de las particulas quedan concentradas en una zona muy subdividida y el resto del arbol se descarta rapido. La distribucion de Clusters es la mas exigente para el QuadTree en 10,000 particulas (263 comparaciones), ya que la consulta puede caer cerca de un cluster denso y revisar mas candidatos que en una distribucion uniforme.
 
 ## Notas
 
